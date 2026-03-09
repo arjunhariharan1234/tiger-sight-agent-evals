@@ -1,5 +1,35 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Static fallback data (precomputed from backend)
+import staticKpis from "@/data/kpis.json";
+import staticFunnel from "@/data/funnel.json";
+import staticResolutionQuality from "@/data/resolution-quality.json";
+import staticBusinessValue from "@/data/business-value.json";
+import staticAgentBenchmark from "@/data/agent-benchmark.json";
+import staticSeverity from "@/data/severity.json";
+import staticIncidentTypes from "@/data/incident-types.json";
+import staticTimeline from "@/data/timeline.json";
+import staticSystemLearnings from "@/data/system-learnings.json";
+import staticAnecdotalLearnings from "@/data/anecdotal-learnings.json";
+import staticCombinedLearnings from "@/data/combined-learnings.json";
+import staticFilterOptions from "@/data/filter-options.json";
+import staticTransactions from "@/data/transactions.json";
+
+const STATIC_MAP: Record<string, unknown> = {
+  "/api/kpis": staticKpis,
+  "/api/funnel": staticFunnel,
+  "/api/resolution-quality": staticResolutionQuality,
+  "/api/business-value": staticBusinessValue,
+  "/api/agent-benchmark": staticAgentBenchmark,
+  "/api/charts/severity": staticSeverity,
+  "/api/charts/incident-types": staticIncidentTypes,
+  "/api/charts/timeline": staticTimeline,
+  "/api/learnings/system": staticSystemLearnings,
+  "/api/learnings/anecdotal": staticAnecdotalLearnings,
+  "/api/learnings/combined": staticCombinedLearnings,
+  "/api/filters/options": staticFilterOptions,
+};
+
 export interface Filters {
   date_from?: string;
   date_to?: string;
@@ -25,9 +55,26 @@ function buildParams(filters: Filters): URLSearchParams {
 async function fetchApi<T>(endpoint: string, filters: Filters = {}): Promise<T> {
   const params = buildParams(filters);
   const url = `${API_BASE}${endpoint}${params.toString() ? "?" + params.toString() : ""}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`API error: ${res.status} ${res.statusText}`);
-  return res.json();
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    return res.json();
+  } catch {
+    // Fallback to static data when backend is unavailable
+    const hasFilters = params.toString().length > 0;
+    if (!hasFilters && STATIC_MAP[endpoint] !== undefined) {
+      return STATIC_MAP[endpoint] as T;
+    }
+    // For filtered requests, still return unfiltered static data as best-effort
+    if (STATIC_MAP[endpoint] !== undefined) {
+      return STATIC_MAP[endpoint] as T;
+    }
+    throw new Error(`Backend unavailable and no static fallback for ${endpoint}`);
+  }
 }
 
 // KPIs
@@ -225,9 +272,17 @@ export async function getTransactions(
     }
   });
   const url = `${API_BASE}/api/transactions?${params.toString()}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json() as Promise<TransactionsResponse>;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    return res.json() as Promise<TransactionsResponse>;
+  } catch {
+    return staticTransactions as unknown as TransactionsResponse;
+  }
 }
 
 // Filter Options

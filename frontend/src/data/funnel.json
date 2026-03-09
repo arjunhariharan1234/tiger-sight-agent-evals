@@ -1,0 +1,1 @@
+[{"stage":"Detected","count":19299,"pct":100.0},{"stage":"Qualified","count":19293,"pct":100.0},{"stage":"Prioritized","count":18855,"pct":97.7},{"stage":"Auto Resolved","count":16368,"pct":84.8},{"stage":"Escalated","count":25,"pct":0.1},{"stage":"Closed","count":16389,"pct":84.9},{"stage":"Reopened","count":0,"pct":0.0}]
