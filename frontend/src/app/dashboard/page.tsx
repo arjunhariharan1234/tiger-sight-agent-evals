@@ -27,6 +27,7 @@ import ImprovementPanel from "@/components/ImprovementPanel";
 import TransactionDrilldown from "@/components/TransactionDrilldown";
 import LearningUpload from "@/components/LearningUpload";
 import LongStoppageLearnings from "@/components/LongStoppageLearnings";
+import ChatAgent from "@/components/ChatAgent";
 import TimelineChart from "@/components/charts/TimelineChart";
 import SeverityChart from "@/components/charts/SeverityChart";
 import IncidentTypeChart from "@/components/charts/IncidentTypeChart";
@@ -186,6 +187,8 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      <ChatAgent />
     </div>
   );
 }
