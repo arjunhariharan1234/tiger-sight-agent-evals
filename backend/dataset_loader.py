@@ -69,7 +69,9 @@ def load_dataset(file_path: str) -> pd.DataFrame:
 
 def get_dataset_path() -> str:
     base = Path(__file__).parent.parent.parent
-    files = list(base.glob("query_result_*.xlsx"))
-    if files:
-        return str(files[0])
-    raise FileNotFoundError("No dataset file found")
+    # Try state_history first, then query_result
+    for pattern in ["state_history.xlsx", "query_result_*.xlsx"]:
+        files = list(base.glob(pattern))
+        if files:
+            return str(files[0])
+    raise FileNotFoundError("No dataset file found (tried state_history.xlsx and query_result_*.xlsx)")
